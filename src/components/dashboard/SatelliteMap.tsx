@@ -2,49 +2,55 @@ import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Satellite, AlertTriangle, CheckCircle, Radio } from "lucide-react";
 
-interface SatelliteData {
+// On exporte l'interface pour l'utiliser dans la page parente
+export interface SatelliteData {
   id: string;
   name: string;
   status: "online" | "warning" | "critical" | "offline";
   position: { x: number; y: number };
   signalStrength: number;
   orbit: string;
+  details?: {
+    cpu: number;
+    ram: number;
+    temp: number;
+  }
 }
 
-const mockSatellites: SatelliteData[] = [
-  { id: "SAT-001", name: "SENTINEL-1A", status: "online", position: { x: 25, y: 30 }, signalStrength: 98, orbit: "LEO" },
-  { id: "SAT-002", name: "COPERNICUS-2", status: "online", position: { x: 55, y: 20 }, signalStrength: 95, orbit: "LEO" },
-  { id: "SAT-003", name: "GALILEO-E14", status: "warning", position: { x: 75, y: 45 }, signalStrength: 67, orbit: "MEO" },
-  { id: "SAT-004", name: "EUTELSAT-KA1", status: "online", position: { x: 40, y: 60 }, signalStrength: 92, orbit: "GEO" },
-  { id: "SAT-005", name: "COSMO-SKY-4", status: "critical", position: { x: 65, y: 70 }, signalStrength: 23, orbit: "LEO" },
-  { id: "SAT-006", name: "METEOSAT-11", status: "online", position: { x: 85, y: 35 }, signalStrength: 99, orbit: "GEO" },
-];
-
 const statusColors = {
-  online: "bg-secure-green",
-  warning: "bg-warning-amber",
-  critical: "bg-threat-red",
-  offline: "bg-muted-foreground",
+  online: "bg-green-500",
+  warning: "bg-orange-500",
+  critical: "bg-red-500",
+  offline: "bg-gray-500",
 };
 
 const statusGlow = {
-  online: "shadow-[0_0_10px_hsl(var(--secure-green))]",
-  warning: "shadow-[0_0_10px_hsl(var(--warning-amber))]",
-  critical: "shadow-[0_0_15px_hsl(var(--threat-red))] animate-pulse",
+  online: "shadow-[0_0_10px_#22c55e]",
+  warning: "shadow-[0_0_10px_#f97316]",
+  critical: "shadow-[0_0_15px_#ef4444] animate-pulse",
   offline: "",
 };
 
-export function SatelliteMap() {
+// Le composant accepte maintenant les données en props
+export function SatelliteMap({ satellites }: { satellites: SatelliteData[] }) {
   const [selectedSatellite, setSelectedSatellite] = useState<SatelliteData | null>(null);
-  const [time, setTime] = useState(new Date());
 
+  // Mise à jour de la sélection si le satellite change de statut
   useEffect(() => {
-    const interval = setInterval(() => setTime(new Date()), 1000);
-    return () => clearInterval(interval);
-  }, []);
+    if (selectedSatellite) {
+      const updated = satellites.find(s => s.id === selectedSatellite.id);
+      if (updated) setSelectedSatellite(updated);
+    }
+  }, [satellites, selectedSatellite]);
+
+  const counts = {
+    online: satellites.filter(s => s.status === "online").length,
+    warning: satellites.filter(s => s.status === "warning").length,
+    critical: satellites.filter(s => s.status === "critical").length
+  };
 
   return (
-    <div className="cyber-card relative overflow-hidden rounded-xl border border-border p-3">
+    <div className="cyber-card relative overflow-hidden rounded-xl border border-border p-3 h-full flex flex-col">
       {/* Header */}
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -55,180 +61,87 @@ export function SatelliteMap() {
         </div>
         <div className="flex items-center gap-3 text-xs">
           <div className="flex items-center gap-1.5">
-            <span className="status-dot status-dot-online" />
-            <span className="text-muted-foreground">En ligne: 4</span>
+            <span className="h-2 w-2 rounded-full bg-green-500" />
+            <span className="text-muted-foreground">{counts.online}</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="status-dot status-dot-warning" />
-            <span className="text-muted-foreground">Alerte: 1</span>
+            <span className="h-2 w-2 rounded-full bg-orange-500" />
+            <span className="text-muted-foreground">{counts.warning}</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="status-dot status-dot-critical" />
-            <span className="text-muted-foreground">Critique: 1</span>
+            <span className="h-2 w-2 rounded-full bg-red-500" />
+            <span className="text-muted-foreground">{counts.critical}</span>
           </div>
         </div>
       </div>
 
-      {/* Map Container - Reduced height */}
-      <div className="relative aspect-[2.5/1] w-full overflow-hidden rounded-lg bg-space-deep">
+      {/* Map Container */}
+      <div className="relative flex-1 min-h-[250px] w-full overflow-hidden rounded-lg bg-[#0a0a1a]">
         {/* Grid overlay */}
-        <div className="absolute inset-0 cyber-grid opacity-30" />
+        <div className="absolute inset-0 opacity-20" 
+             style={{ backgroundImage: 'linear-gradient(#333 1px, transparent 1px), linear-gradient(90deg, #333 1px, transparent 1px)', backgroundSize: '20px 20px' }} 
+        />
         
-        {/* World map outline (simplified) */}
-        <svg
-          className="absolute inset-0 h-full w-full opacity-20"
-          viewBox="0 0 100 50"
-          preserveAspectRatio="xMidYMid slice"
-        >
-          <path
-            d="M10,25 Q15,20 25,22 T40,20 T55,25 T70,22 T85,25 T95,23"
-            fill="none"
-            stroke="hsl(var(--primary))"
-            strokeWidth="0.3"
-          />
-          <ellipse cx="30" cy="20" rx="8" ry="5" fill="none" stroke="hsl(var(--primary))" strokeWidth="0.2" />
-          <ellipse cx="50" cy="25" rx="10" ry="6" fill="none" stroke="hsl(var(--primary))" strokeWidth="0.2" />
-          <ellipse cx="75" cy="22" rx="7" ry="4" fill="none" stroke="hsl(var(--primary))" strokeWidth="0.2" />
-        </svg>
-
-        {/* Orbit paths */}
-        <svg className="absolute inset-0 h-full w-full" viewBox="0 0 100 50">
-          {/* LEO orbit */}
-          <ellipse
-            cx="50"
-            cy="25"
-            rx="45"
-            ry="20"
-            fill="none"
-            stroke="hsl(var(--cyber-cyan) / 0.2)"
-            strokeWidth="0.2"
-            strokeDasharray="2,2"
-          />
-          {/* MEO orbit */}
-          <ellipse
-            cx="50"
-            cy="25"
-            rx="35"
-            ry="15"
-            fill="none"
-            stroke="hsl(var(--data-blue) / 0.2)"
-            strokeWidth="0.2"
-            strokeDasharray="2,2"
-          />
+        {/* World map outline (simplified CSS based) */}
+        <svg className="absolute inset-0 h-full w-full opacity-20 pointer-events-none" viewBox="0 0 100 50" preserveAspectRatio="none">
+           <path d="M0,25 Q25,20 50,25 T100,25" fill="none" stroke="hsl(var(--primary))" strokeWidth="0.2" />
+           <ellipse cx="50" cy="25" rx="30" ry="15" fill="none" stroke="hsl(var(--primary))" strokeWidth="0.1" strokeDasharray="2,2"/>
         </svg>
 
         {/* Satellites */}
-        {mockSatellites.map((sat) => (
+        {satellites.map((sat) => (
           <div
             key={sat.id}
             className={cn(
-              "absolute cursor-pointer transition-all duration-300 hover:scale-150",
-              selectedSatellite?.id === sat.id && "scale-150 z-10"
+              "absolute cursor-pointer transition-all duration-300 hover:scale-125 hover:z-20",
+              selectedSatellite?.id === sat.id && "scale-125 z-10"
             )}
             style={{ left: `${sat.position.x}%`, top: `${sat.position.y}%` }}
             onClick={() => setSelectedSatellite(sat)}
           >
             <div
               className={cn(
-                "h-3 w-3 rounded-full transition-all",
+                "h-3 w-3 rounded-full transition-all border border-background",
                 statusColors[sat.status],
                 statusGlow[sat.status]
               )}
             />
-            {/* Pulse ring for critical */}
             {sat.status === "critical" && (
-              <div className="absolute inset-0 animate-ping rounded-full bg-threat-red opacity-50" />
+              <div className="absolute inset-0 animate-ping rounded-full bg-red-500 opacity-50" />
             )}
-            {/* Connection lines */}
-            {sat.status !== "offline" && selectedSatellite?.id === sat.id && (
-              <svg className="absolute -left-1 -top-1 h-10 w-10 overflow-visible">
-                <line
-                  x1="6"
-                  y1="6"
-                  x2="40"
-                  y2="40"
-                  stroke="hsl(var(--primary) / 0.5)"
-                  strokeWidth="0.5"
-                  strokeDasharray="2,2"
-                />
-              </svg>
+            
+            {/* Label on hover or selected */}
+            {(selectedSatellite?.id === sat.id) && (
+               <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-black/80 text-[10px] px-2 py-0.5 rounded border border-primary/30 whitespace-nowrap">
+                  {sat.name}
+               </div>
             )}
           </div>
         ))}
-
-        {/* Ground stations */}
-        <div
-          className="absolute left-[30%] top-[75%] flex h-4 w-4 items-center justify-center"
-          title="Station Sol - Paris"
-        >
-          <Radio className="h-3 w-3 text-primary" />
-        </div>
-        <div
-          className="absolute left-[70%] top-[65%] flex h-4 w-4 items-center justify-center"
-          title="Station Sol - Kourou"
-        >
-          <Radio className="h-3 w-3 text-primary" />
-        </div>
       </div>
 
-      {/* Selected Satellite Info - More compact */}
+      {/* Selected Satellite Info */}
       {selectedSatellite && (
-        <div className="mt-3 rounded-lg bg-secondary/50 p-2.5">
+        <div className="mt-3 rounded-lg bg-secondary/30 p-2.5 animate-in slide-in-from-bottom-2">
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center gap-2">
-                <span
-                  className={cn(
-                    "h-2 w-2 rounded-full",
-                    statusColors[selectedSatellite.status]
-                  )}
-                />
-                <span className="font-mono text-sm font-semibold">
-                  {selectedSatellite.name}
-                </span>
+                <span className={cn("h-2 w-2 rounded-full", statusColors[selectedSatellite.status])} />
+                <span className="font-mono text-sm font-semibold">{selectedSatellite.name}</span>
               </div>
-              <div className="mt-0.5 flex items-center gap-3 text-xs text-muted-foreground">
-                <span>ID: {selectedSatellite.id}</span>
-                <span>Orbite: {selectedSatellite.orbit}</span>
+              <div className="mt-1 flex gap-4 text-xs text-muted-foreground">
+                <span>CPU: <span className={selectedSatellite.details?.cpu! > 80 ? "text-red-400" : ""}>{selectedSatellite.details?.cpu?.toFixed(0)}%</span></span>
+                <span>RAM: {selectedSatellite.details?.ram?.toFixed(0)}%</span>
+                <span>TEMP: {selectedSatellite.details?.temp?.toFixed(0)}°C</span>
               </div>
             </div>
             <div className="text-right">
-              <div className="flex items-center gap-1">
-                {selectedSatellite.status === "critical" ? (
-                  <AlertTriangle className="h-4 w-4 text-threat-red" />
-                ) : (
-                  <CheckCircle className="h-4 w-4 text-secure-green" />
-                )}
-                <span
-                  className={cn(
-                    "text-sm font-medium",
-                    selectedSatellite.status === "critical"
-                      ? "text-threat-red"
-                      : "text-secure-green"
-                  )}
-                >
+              <div className="flex items-center justify-end gap-1">
+                 <span className={cn("text-lg font-bold", selectedSatellite.status === "critical" ? "text-red-500" : "text-green-500")}>
                   {selectedSatellite.signalStrength}%
-                </span>
+                 </span>
+                 <Radio className="h-3 w-3 text-muted-foreground"/>
               </div>
-              <span className="text-xs text-muted-foreground">Signal</span>
-            </div>
-          </div>
-          {/* Signal bar */}
-          <div className="mt-2">
-            <div className="data-bar">
-              <div
-                className={cn(
-                  "data-bar-fill",
-                  selectedSatellite.signalStrength > 80
-                    ? "data-bar-fill-green"
-                    : selectedSatellite.signalStrength > 50
-                    ? "data-bar-fill-cyan"
-                    : selectedSatellite.signalStrength > 30
-                    ? "data-bar-fill-amber"
-                    : "data-bar-fill-red"
-                )}
-                style={{ width: `${selectedSatellite.signalStrength}%` }}
-              />
             </div>
           </div>
         </div>

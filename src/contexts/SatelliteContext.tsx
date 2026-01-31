@@ -12,6 +12,8 @@ interface SatelliteContextType {
   refreshData: () => Promise<void>;
   sendIntervention: (id: string, action: 'approve' | 'reject') => Promise<void>;
   launchAttack: (type: string, target: string) => Promise<void>;
+  stopSimulation: (id: string) => Promise<void>;
+  attackHistory: any[];
 }
 
 const SatelliteContext = createContext<SatelliteContextType>({} as SatelliteContextType);
@@ -22,6 +24,7 @@ export const SatelliteProvider = ({ children }: { children: React.ReactNode }) =
   const [pendingApprovals, setPendingApprovals] = useState<DefenseRequest[]>([]);
   const [activeAttacks, setActiveAttacks] = useState<any[]>([]);
   const [isConnected, setIsConnected] = useState(false);
+    const [attackHistory, setAttackHistory] = useState<any[]>([]);
 
   // 1. Fonction de chargement des données
   const refreshData = useCallback(async () => {
@@ -31,8 +34,15 @@ export const SatelliteProvider = ({ children }: { children: React.ReactNode }) =
       // Sécurité : Si data.human_intervention est null, on met []
       setPendingApprovals(data.human_intervention?.pending_requests || []);
       setActiveAttacks(data.active_attacks || []);
+      setAttackHistory(data.attack_history || []);
     }
   }, []);
+
+  const stopSimulation = async (id: string) => {
+    await api.stopAttack(id);
+    toast.info("Simulation arrêtée");
+    refreshData();
+  };
 
   // 2. WebSocket
   useEffect(() => {
@@ -91,7 +101,7 @@ export const SatelliteProvider = ({ children }: { children: React.ReactNode }) =
   return (
     <SatelliteContext.Provider value={{ 
       systemState, pendingApprovals, activeAttacks, isConnected, 
-      refreshData, sendIntervention, launchAttack 
+      refreshData, sendIntervention, launchAttack, stopSimulation, attackHistory 
     }}>
       {children}
     </SatelliteContext.Provider>

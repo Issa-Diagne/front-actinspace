@@ -3,22 +3,21 @@
 const API_URL = "http://localhost:8000";
 
 export const api = {
-  // --- Dashboard & Santé ---
-  getHealth: async () => {
-    const res = await fetch(`${API_URL}/health`);
-    return res.json();
-  },
+  // ... (Garder les fonctions existantes getDashboardData, intervene, startAttack, stopAttack) ...
+
   getDashboardData: async () => {
-    const res = await fetch(`${API_URL}/dashboard/data`);
-    return res.json();
+     try {
+       const res = await fetch(`${API_URL}/dashboard/data`);
+       if (!res.ok) throw new Error("Erreur réseau");
+       return await res.json();
+     } catch (error) {
+       console.error("API Error:", error);
+       return null;
+     }
   },
 
-  // --- Intervention Humaine (Human-in-the-loop) ---
-  getPendingRequests: async () => {
-    const res = await fetch(`${API_URL}/human/pending`);
-    return res.json();
-  },
-  intervene: async (action: "approve" | "reject" | "execute_manual", requestId: string, reason?: string, manualDetails?: any) => {
+  intervene: async (action: string, requestId: string, reason?: string) => {
+    // ... (code existant)
     const res = await fetch(`${API_URL}/human/intervene`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -26,17 +25,14 @@ export const api = {
         action,
         request_id: requestId,
         reason,
-        satellite_id: manualDetails?.satelliteId,
-        manual_action: manualDetails?.action,
-        approver: "operator_1" // Idéalement venant de l'auth
+        approver: "OPERATOR-MAIN"
       }),
     });
-    if (!res.ok) throw new Error("Erreur intervention");
     return res.json();
   },
 
-  // --- Simulations d'Attaques ---
   startAttack: async (scenarioName: string, targetSat: string = "SAT-001") => {
+    // ... (code existant)
     const res = await fetch(`${API_URL}/attack/start`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -48,14 +44,38 @@ export const api = {
     });
     return res.json();
   },
+
   stopAttack: async (scenarioId: string) => {
-    const res = await fetch(`${API_URL}/attack/stop/${scenarioId}`, { method: "DELETE" });
+      const res = await fetch(`${API_URL}/attack/stop/${scenarioId}`, { method: "DELETE" });
+      return res.json();
+  },
+
+  // --- NOUVELLES FONCTIONS À AJOUTER ---
+
+  // 1. Récupérer l'historique des interventions humaines
+  getInterventionHistory: async (limit: int = 50) => {
+    const res = await fetch(`${API_URL}/human/history?limit=${limit}`);
     return res.json();
   },
 
-  // --- Constellation ---
-  getConstellationStatus: async () => {
-    const res = await fetch(`${API_URL}/constellation/status`);
+  // 2. Récupérer les actions rapides suggérées
+  getQuickActions: async (severity: string = "high") => {
+    const res = await fetch(`${API_URL}/human/quick-actions?severity=${severity}`);
+    return res.json();
+  },
+
+  // 3. Exécuter une action manuelle (via Quick Actions)
+  executeManualAction: async (satelliteId: string, actionId: string) => {
+    const res = await fetch(`${API_URL}/human/intervene`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "execute_manual",
+        satellite_id: satelliteId,
+        manual_action: actionId,
+        approver: "OPERATOR-MANUAL"
+      }),
+    });
     return res.json();
   }
 };

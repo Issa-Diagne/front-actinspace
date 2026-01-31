@@ -1,354 +1,89 @@
 import { MainLayout } from "@/components/layout/MainLayout";
-import { SatelliteMap } from "@/components/dashboard/SatelliteMap";
-import { useSatellites } from "@/hooks/useSatellites";
+import { useSatelliteSystem } from "@/contexts/SatelliteContext";
+import { Satellite, Activity, Thermometer, Cpu } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Satellite, Signal, Activity, Settings, RefreshCw, AlertTriangle } from "lucide-react";
-import { Button } from "@/components/ui/button";
-
-const statusConfig = {
-  online: { color: "text-secure-green", bg: "bg-secure-green/10", label: "En ligne" },
-  warning: { color: "text-warning-amber", bg: "bg-warning-amber/10", label: "Alerte" },
-  critical: { color: "text-threat-red", bg: "bg-threat-red/10", label: "Critique" },
-  offline: { color: "text-muted-foreground", bg: "bg-muted/10", label: "Hors ligne" },
-};
 
 const SatellitesPage = () => {
-  const { satellites, constellationStatus, isLoading, error, getConstellationStats, refreshData } = useSatellites();
-  const stats = getConstellationStats();
+  const { systemState } = useSatelliteSystem();
+  const satellites = systemState?.telemetry || [];
 
   return (
     <MainLayout
       title="Constellation Satellite"
-      subtitle="Gestion et monitoring des actifs spatiaux"
+      subtitle="Télémétrie temps réel des actifs spatiaux"
     >
-      {/* Header Stats */}
-      <div className="mb-6 grid gap-4 sm:grid-cols-4">
-        <div className="cyber-card rounded-xl border border-border p-4">
-          <span className="text-xs text-muted-foreground">Total Satellites</span>
-          <div className="mt-1 flex items-baseline gap-2">
-            <span className="font-orbitron text-2xl font-bold text-foreground">
-              {stats.total}
-            </span>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {satellites.length === 0 ? (
+          <div className="col-span-full text-center py-10 text-muted-foreground">
+            En attente de données de télémétrie...
           </div>
-        </div>
-
-        <div className="cyber-card rounded-xl border border-border p-4">
-          <span className="text-xs text-muted-foreground">En ligne</span>
-          <div className="mt-1 flex items-baseline gap-2">
-            <span className="font-orbitron text-2xl font-bold text-secure-green">
-              {stats.online}
-            </span>
-          </div>
-        </div>
-
-        <div className="cyber-card rounded-xl border border-border p-4">
-          <span className="text-xs text-muted-foreground">Alertes</span>
-          <div className="mt-1 flex items-baseline gap-2">
-            <span className="font-orbitron text-2xl font-bold text-warning-amber">
-              {stats.warning}
-            </span>
-          </div>
-        </div>
-
-        <div className="cyber-card rounded-xl border border-border p-4">
-          <span className="text-xs text-muted-foreground">Critiques</span>
-          <div className="mt-1 flex items-baseline gap-2">
-            <span className="font-orbitron text-2xl font-bold text-threat-red">
-              {stats.critical}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Error Display */}
-      {error && (
-        <div className="mb-6 rounded-lg border border-threat-red/30 bg-threat-red/5 p-4">
-          <div className="flex items-start gap-3">
-            <AlertTriangle className="h-5 w-5 text-threat-red" />
-            <div>
-              <p className="text-sm font-medium text-threat-red">
-                Erreur de connexion au backend
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {error}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Satellite list */}
-        <div className="lg:col-span-2 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="font-orbitron text-lg font-semibold">
-              Satellites Actifs {isLoading && <RefreshCw className="inline-block ml-2 h-4 w-4 animate-spin" />}
-            </h2>
-            <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="gap-2"
-                onClick={refreshData}
-                disabled={isLoading}
-              >
-                <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
-                Actualiser
-              </Button>
-              <Button variant="outline" size="sm" className="gap-2">
-                <Settings className="h-4 w-4" />
-                Configuration
-              </Button>
-            </div>
-          </div>
-
-          {satellites.length === 0 && !isLoading ? (
-            <div className="cyber-card rounded-xl border border-border p-8 text-center">
-              <Satellite className="mx-auto h-12 w-12 text-muted-foreground" />
-              <p className="mt-4 text-sm text-muted-foreground">
-                Aucun satellite disponible
-              </p>
-              <p className="mt-2 text-xs text-muted-foreground">
-                Assurez-vous que le backend est en cours d'exécution
-              </p>
-            </div>
-          ) : (
-            <div className="grid gap-4 sm:grid-cols-2">
-              {satellites.map((sat) => {
-                const config = statusConfig[sat.status];
-                return (
-                  <div
-                    key={sat.id}
-                    className={cn(
-                      "cyber-card rounded-xl border p-4 transition-all hover:border-primary/30",
-                      sat.status === "critical" && "border-threat-red/50"
-                    )}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex gap-3">
-                        <div className={cn("flex h-10 w-10 items-center justify-center rounded-lg", config.bg)}>
-                          <Satellite className={cn("h-5 w-5", config.color)} />
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono text-sm font-semibold text-foreground">
-                              {sat.name}
-                            </span>
-                            <span
-                              className={cn(
-                                "rounded px-1.5 py-0.5 text-[10px] font-medium",
-                                config.bg,
-                                config.color
-                              )}
-                            >
-                              {config.label}
-                            </span>
-                          </div>
-                          <span className="text-xs text-muted-foreground">{sat.id}</span>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="flex items-center gap-1">
-                          <Signal className={cn("h-3 w-3", config.color)} />
-                          <span className={cn("font-mono text-sm", config.color)}>
-                            {sat.signal}%
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Telemetry Data */}
-                    <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
-                      <div className="rounded bg-secondary/50 p-2 text-center">
-                        <span className="text-muted-foreground">Orbite</span>
-                        <p className="font-mono text-foreground">{sat.orbit}</p>
-                      </div>
-                      <div className="rounded bg-secondary/50 p-2 text-center">
-                        <span className="text-muted-foreground">Altitude</span>
-                        <p className="font-mono text-foreground">{sat.altitude}</p>
-                      </div>
-                      <div className="rounded bg-secondary/50 p-2 text-center">
-                        <span className="text-muted-foreground">Vitesse</span>
-                        <p className="font-mono text-foreground">{sat.velocity}</p>
-                      </div>
-                    </div>
-
-                    {/* CPU & Memory */}
-                    <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
-                      <div>
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-muted-foreground">CPU</span>
-                          <span className="font-mono text-foreground">
-                            {sat.telemetry.cpu_usage.toFixed(1)}%
-                          </span>
-                        </div>
-                        <div className="data-bar">
-                          <div
-                            className={cn(
-                              "data-bar-fill",
-                              sat.telemetry.cpu_usage > 80
-                                ? "data-bar-fill-red"
-                                : sat.telemetry.cpu_usage > 60
-                                ? "data-bar-fill-amber"
-                                : "data-bar-fill-green"
-                            )}
-                            style={{ width: `${sat.telemetry.cpu_usage}%` }}
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-muted-foreground">Mémoire</span>
-                          <span className="font-mono text-foreground">
-                            {sat.telemetry.memory_usage.toFixed(1)}%
-                          </span>
-                        </div>
-                        <div className="data-bar">
-                          <div
-                            className={cn(
-                              "data-bar-fill",
-                              sat.telemetry.memory_usage > 80
-                                ? "data-bar-fill-red"
-                                : sat.telemetry.memory_usage > 60
-                                ? "data-bar-fill-amber"
-                                : "data-bar-fill-green"
-                            )}
-                            style={{ width: `${sat.telemetry.memory_usage}%` }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Temperature */}
-                    <div className="mt-2 flex items-center justify-between text-xs">
-                      <span className="text-muted-foreground">Température</span>
-                      <span className={cn(
-                        "font-mono",
-                        sat.telemetry.temperature > 50 ? "text-threat-red" :
-                        sat.telemetry.temperature > 40 ? "text-warning-amber" :
-                        "text-foreground"
-                      )}>
-                        {sat.telemetry.temperature.toFixed(1)}°C
+        ) : (
+          satellites.map((sat: any) => (
+            <div key={sat.satellite_id} className="cyber-card rounded-xl border border-border p-5 relative overflow-hidden">
+              {/* Status Header */}
+              <div className="flex justify-between items-start mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <Satellite className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg">{sat.satellite_id}</h3>
+                    <div className="flex items-center gap-1.5">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
                       </span>
-                    </div>
-
-                    {/* Signal bar */}
-                    <div className="mt-3">
-                      <div className="data-bar">
-                        <div
-                          className={cn(
-                            "data-bar-fill",
-                            sat.signal > 80
-                              ? "data-bar-fill-green"
-                              : sat.signal > 50
-                              ? "data-bar-fill-amber"
-                              : "data-bar-fill-red"
-                          )}
-                          style={{ width: `${sat.signal}%` }}
-                        />
-                      </div>
+                      <span className="text-xs text-muted-foreground">Signal Nominal</span>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+                </div>
+              </div>
 
-        {/* Map */}
-        <div className="space-y-4">
-          <SatelliteMap />
-          
-          {/* Constellation Status */}
-          {constellationStatus && (
-            <div className="cyber-card rounded-xl border border-border p-4">
-              <h3 className="mb-4 font-orbitron text-sm font-semibold uppercase tracking-wider">
-                État Constellation
-              </h3>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">Total</span>
-                  <span className="font-mono text-sm font-semibold text-foreground">
-                    {constellationStatus.total_satellites}
-                  </span>
+              {/* Telemetry Grid */}
+              <div className="space-y-4">
+                {/* CPU */}
+                <div>
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="flex items-center gap-1 text-muted-foreground"><Cpu size={12}/> CPU</span>
+                    <span className={cn("font-mono font-bold", sat.cpu_usage > 80 ? "text-red-500" : "text-foreground")}>
+                      {sat.cpu_usage.toFixed(1)}%
+                    </span>
+                  </div>
+                  <div className="h-1.5 w-full bg-secondary rounded-full overflow-hidden">
+                    <div 
+                      className={cn("h-full transition-all duration-500", sat.cpu_usage > 80 ? "bg-red-500" : "bg-primary")} 
+                      style={{ width: `${sat.cpu_usage}%` }}
+                    />
+                  </div>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">Opérationnels</span>
-                  <span className="font-mono text-sm font-semibold text-secure-green">
-                    {constellationStatus.operational}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">Sous attaque</span>
-                  <span className="font-mono text-sm font-semibold text-threat-red">
-                    {constellationStatus.under_attack}
-                  </span>
-                </div>
-              </div>
-            </div>
-          )}
 
-          {/* Average Stats */}
-          <div className="cyber-card rounded-xl border border-border p-4">
-            <h3 className="mb-4 font-orbitron text-sm font-semibold uppercase tracking-wider">
-              Moyennes Constellation
-            </h3>
-            <div className="space-y-3">
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs text-muted-foreground">Signal moyen</span>
-                  <span className="font-mono text-sm font-semibold text-foreground">
-                    {stats.avgSignal}%
+                {/* Memory */}
+                <div>
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="flex items-center gap-1 text-muted-foreground"><Activity size={12}/> RAM</span>
+                    <span className="font-mono font-bold">{sat.memory_usage.toFixed(1)}%</span>
+                  </div>
+                  <div className="h-1.5 w-full bg-secondary rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-blue-500 transition-all duration-500" 
+                      style={{ width: `${sat.memory_usage}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Temperature */}
+                <div className="flex items-center justify-between pt-2 border-t border-border/50">
+                  <span className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Thermometer size={14}/> Température
                   </span>
-                </div>
-                <div className="data-bar">
-                  <div
-                    className="data-bar-fill data-bar-fill-green"
-                    style={{ width: `${stats.avgSignal}%` }}
-                  />
-                </div>
-              </div>
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs text-muted-foreground">CPU moyen</span>
-                  <span className="font-mono text-sm font-semibold text-foreground">
-                    {stats.avgCPU}%
+                  <span className={cn("font-mono text-sm", sat.temperature > 80 ? "text-red-500 font-bold" : "text-foreground")}>
+                    {sat.temperature.toFixed(1)}°C
                   </span>
-                </div>
-                <div className="data-bar">
-                  <div
-                    className={cn(
-                      "data-bar-fill",
-                      stats.avgCPU > 80 ? "data-bar-fill-red" :
-                      stats.avgCPU > 60 ? "data-bar-fill-amber" :
-                      "data-bar-fill-green"
-                    )}
-                    style={{ width: `${stats.avgCPU}%` }}
-                  />
-                </div>
-              </div>
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs text-muted-foreground">Mémoire moyenne</span>
-                  <span className="font-mono text-sm font-semibold text-foreground">
-                    {stats.avgMemory}%
-                  </span>
-                </div>
-                <div className="data-bar">
-                  <div
-                    className={cn(
-                      "data-bar-fill",
-                      stats.avgMemory > 80 ? "data-bar-fill-red" :
-                      stats.avgMemory > 60 ? "data-bar-fill-amber" :
-                      "data-bar-fill-green"
-                    )}
-                    style={{ width: `${stats.avgMemory}%` }}
-                  />
                 </div>
               </div>
             </div>
-          </div>
-        </div>
+          ))
+        )}
       </div>
     </MainLayout>
   );

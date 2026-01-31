@@ -14,6 +14,7 @@ import SettingsPage from '@/pages/SettingsPage';
 import ReportsPage from '@/pages/ReportsPage';
 import AutonomousDefensePage from '@/pages/AutonomousDefensePage';
 import NotFound from '@/pages/NotFound';
+import { SatelliteProvider } from "@/contexts/SatelliteContext";
 
 // Protected Route wrapper
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -120,10 +121,12 @@ function AppRoutes() {
 function App() {
   return (
     <AuthProvider>
+      <SatelliteProvider>
       <Router>
         <AppRoutes />
         <Toaster />
       </Router>
+      </SatelliteProvider>
     </AuthProvider>
   );
 }

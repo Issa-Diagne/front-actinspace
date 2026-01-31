@@ -1,101 +1,90 @@
+import { useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { SimulationPanel } from "@/components/dashboard/SimulationPanel";
-import { cn } from "@/lib/utils";
-import { Zap, FileText, Download, BarChart3 } from "lucide-react";
+import { useSatelliteSystem } from "@/contexts/SatelliteContext";
+import { Zap, Skull, ShieldAlert, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
-const previousSimulations = [
-  { id: "SIM-2024-047", type: "Brouillage RF", date: "29/01/2026", result: "success", duration: "2.3s" },
-  { id: "SIM-2024-046", type: "Spoofing GPS", date: "28/01/2026", result: "success", duration: "1.8s" },
-  { id: "SIM-2024-045", type: "Intrusion TTC", date: "27/01/2026", result: "success", duration: "3.1s" },
-  { id: "SIM-2024-044", type: "Brouillage RF", date: "26/01/2026", result: "partial", duration: "5.2s" },
+const scenarios = [
+  { id: "cpu_stress", name: "Surcharge CPU (Dos)", icon: Activity, desc: "Sature le processeur du satellite pour bloquer les commandes." },
+  { id: "memory_leak", name: "Fuite Mémoire", icon: Zap, desc: "Injecte un processus qui consomme toute la RAM disponible." },
+  { id: "jamming", name: "Brouillage RF", icon: Radio, desc: "Interférence sur les bandes de fréquence de communication." },
+  { id: "auth_bruteforce", name: "Intrusion Force Brute", icon: Skull, desc: "Tentative de deviner les clés de chiffrement." },
 ];
 
 const SimulationPage = () => {
+  const { launchAttack, activeAttacks } = useSatelliteSystem();
+  const [loading, setLoading] = useState<string | null>(null);
+
+  const handleLaunch = async (scenarioId: string) => {
+    setLoading(scenarioId);
+    // On cible SAT-001 par défaut pour la démo
+    await launchAttack(scenarioId, "SAT-001");
+    setTimeout(() => setLoading(null), 1000);
+  };
+
   return (
     <MainLayout
-      title="Mode Simulation"
-      subtitle="Test et validation des mécanismes de défense"
+      title="Simulateur de Menaces"
+      subtitle="Testez la résilience de l'IA contre des attaques cyber"
     >
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Main simulation panel */}
-        <div className="lg:col-span-2 space-y-6">
-          <SimulationPanel />
-
-          {/* Stats */}
-          <div className="cyber-card rounded-xl border border-border p-4">
-            <div className="mb-4 flex items-center gap-2">
-              <BarChart3 className="h-5 w-5 text-primary" />
-              <h3 className="font-orbitron text-sm font-semibold uppercase tracking-wider">
-                Statistiques de Simulation
-              </h3>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-4">
-              <div className="rounded-lg bg-secondary/50 p-3 text-center">
-                <span className="font-orbitron text-2xl font-bold text-foreground">47</span>
-                <p className="text-xs text-muted-foreground">Simulations totales</p>
+        {/* Launcher Panel */}
+        <div className="lg:col-span-2 space-y-4">
+          <h2 className="text-lg font-bold flex items-center gap-2">
+            <ShieldAlert className="text-red-500" /> 
+            Catalogue d'Attaques
+          </h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {scenarios.map((scenario) => (
+              <div key={scenario.id} className="cyber-card p-4 border border-border rounded-xl hover:border-red-500/50 transition-colors">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="p-2 bg-red-500/10 rounded-lg">
+                    <scenario.icon className="h-6 w-6 text-red-500" />
+                  </div>
+                  <Button 
+                    variant="destructive" 
+                    size="sm"
+                    disabled={loading === scenario.id}
+                    onClick={() => handleLaunch(scenario.id)}
+                    className="shadow-glow-red"
+                  >
+                    {loading === scenario.id ? "Lancement..." : "LANCER"}
+                  </Button>
+                </div>
+                <h3 className="font-bold text-foreground">{scenario.name}</h3>
+                <p className="text-sm text-muted-foreground mt-1">{scenario.desc}</p>
               </div>
-              <div className="rounded-lg bg-secure-green/10 p-3 text-center">
-                <span className="font-orbitron text-2xl font-bold text-secure-green">98%</span>
-                <p className="text-xs text-muted-foreground">Taux de succès</p>
-              </div>
-              <div className="rounded-lg bg-primary/10 p-3 text-center">
-                <span className="font-orbitron text-2xl font-bold text-primary">0.4s</span>
-                <p className="text-xs text-muted-foreground">Temps réponse moy.</p>
-              </div>
-              <div className="rounded-lg bg-warning-amber/10 p-3 text-center">
-                <span className="font-orbitron text-2xl font-bold text-warning-amber">3</span>
-                <p className="text-xs text-muted-foreground">Types d'attaques</p>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
 
-        {/* Previous simulations */}
-        <div className="cyber-card rounded-xl border border-border p-4">
-          <div className="mb-4 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <FileText className="h-5 w-5 text-primary" />
-              <h3 className="font-orbitron text-sm font-semibold uppercase tracking-wider">
-                Historique
-              </h3>
-            </div>
-            <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs">
-              <Download className="h-3 w-3" />
-              Export
-            </Button>
-          </div>
-          <div className="space-y-2">
-            {previousSimulations.map((sim) => (
-              <div
-                key={sim.id}
-                className="rounded-lg border border-border bg-secondary/30 p-3 transition-all hover:border-primary/30"
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <Zap className="h-3 w-3 text-warning-amber" />
-                      <span className="font-mono text-xs font-medium text-foreground">
-                        {sim.id}
-                      </span>
-                    </div>
-                    <span className="text-xs text-muted-foreground">{sim.type}</span>
+        {/* Active Simulations Panel */}
+        <div className="cyber-card border border-border rounded-xl p-4 h-fit">
+          <h3 className="font-orbitron font-bold mb-4 flex items-center gap-2">
+            <Activity className="text-primary" />
+            Simulations en cours
+          </h3>
+          
+          <div className="space-y-3">
+            {activeAttacks.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">
+                Aucune simulation active.
+              </p>
+            ) : (
+              activeAttacks.map((attack: any) => (
+                <div key={attack.scenario_id} className="bg-background/50 p-3 rounded-lg border border-red-500/30 animate-pulse">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="font-bold text-red-400 text-sm">{attack.scenario_name || attack.name}</span>
+                    <span className="text-[10px] bg-red-500/20 text-red-300 px-1.5 py-0.5 rounded">ACTIVE</span>
                   </div>
-                  <div className="text-right">
-                    <span
-                      className={cn(
-                        "rounded px-1.5 py-0.5 text-[10px] font-medium",
-                        sim.result === "success" && "bg-secure-green/10 text-secure-green",
-                        sim.result === "partial" && "bg-warning-amber/10 text-warning-amber"
-                      )}
-                    >
-                      {sim.result === "success" ? "Réussi" : "Partiel"}
-                    </span>
-                    <p className="mt-0.5 text-[10px] text-muted-foreground">{sim.date}</p>
+                  <div className="text-xs text-muted-foreground flex justify-between">
+                    <span>Cible: {attack.target_satellite}</span>
+                    <span>Durée: {attack.elapsed_time}s</span>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       </div>
@@ -103,4 +92,5 @@ const SimulationPage = () => {
   );
 };
 
+import { Radio } from "lucide-react"; // Ajout de l'import manquant
 export default SimulationPage;

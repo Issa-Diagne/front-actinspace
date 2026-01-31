@@ -1,165 +1,103 @@
 import { MainLayout } from "@/components/layout/MainLayout";
-import { ThreatTimeline } from "@/components/dashboard/ThreatTimeline";
+import { useSatelliteSystem } from "@/contexts/SatelliteContext";
+import { AlertTriangle, ShieldCheck, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { AlertTriangle, Shield, Radio, Zap, Filter, Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-
-const threatStats = [
-  { label: "Total détectées", value: 47, period: "30 jours" },
-  { label: "Neutralisées", value: 45, period: "95.7%" },
-  { label: "En cours", value: 2, period: "analyse" },
-  { label: "Temps réponse moy.", value: "0.4s", period: "optimal" },
-];
-
-const activeThreats = [
-  {
-    id: "THR-001",
-    type: "jamming",
-    severity: "high",
-    target: "GALILEO-E14",
-    description: "Interférence RF détectée sur le canal L-Band. Source identifiée à 34.5°N, 28.3°E.",
-    detectedAt: "14:23:45",
-    status: "analyzing",
-  },
-  {
-    id: "THR-002",
-    type: "intrusion",
-    severity: "critical",
-    target: "COSMO-SKY-4",
-    description: "Tentative d'accès non autorisé au système TTC. Origine: réseau compromis.",
-    detectedAt: "14:15:22",
-    status: "mitigating",
-  },
-];
-
-const severityColors = {
-  low: "bg-secure-green/10 text-secure-green border-secure-green/30",
-  medium: "bg-warning-amber/10 text-warning-amber border-warning-amber/30",
-  high: "bg-threat-red/10 text-threat-red border-threat-red/30",
-  critical: "bg-threat-red text-white border-threat-red glow-threat",
-};
 
 const ThreatsPage = () => {
+  const { activeAttacks, systemState } = useSatelliteSystem();
+
+  // Pour l'historique, on utilise les logs du systemState s'ils existent, sinon vide
+  // Note: Dans une vraie app, on ferait un appel API spécifique pour l'historique
+  const history = systemState?.human_intervention?.recent_decisions || [];
+
   return (
     <MainLayout
-      title="Détection des Menaces"
-      subtitle="Analyse et réponse aux cyberattaques"
+      title="Surveillance des Menaces"
+      subtitle="Détection et neutralisation en temps réel"
     >
-      {/* Stats */}
-      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {threatStats.map((stat, i) => (
-          <div key={i} className="cyber-card rounded-xl border border-border p-4">
-            <span className="text-xs text-muted-foreground">{stat.label}</span>
-            <div className="mt-1 flex items-baseline gap-2">
-              <span className="font-orbitron text-2xl font-bold text-foreground">
-                {stat.value}
-              </span>
-              <span className="text-xs text-muted-foreground">{stat.period}</span>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Filters */}
-      <div className="mb-6 flex flex-wrap items-center gap-4">
-        <div className="relative flex-1 min-w-64">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Rechercher une menace..."
-            className="bg-secondary/50 pl-10 font-mono"
-          />
-        </div>
-        <Button variant="outline" className="gap-2">
-          <Filter className="h-4 w-4" />
-          Filtrer
-        </Button>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Active Threats */}
-        <div className="lg:col-span-2 space-y-4">
-          <h2 className="font-orbitron text-lg font-semibold">Menaces Actives</h2>
-          {activeThreats.map((threat) => (
-            <div
-              key={threat.id}
-              className={cn(
-                "cyber-card rounded-xl border p-4",
-                threat.severity === "critical" && "border-threat-red/50"
-              )}
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex gap-3">
-                  <div
-                    className={cn(
-                      "flex h-10 w-10 items-center justify-center rounded-lg",
-                      threat.type === "jamming" && "bg-warning-amber/10",
-                      threat.type === "intrusion" && "bg-threat-red/10",
-                      threat.type === "spoofing" && "bg-data-purple/10"
-                    )}
-                  >
-                    {threat.type === "jamming" && (
-                      <Radio className="h-5 w-5 text-warning-amber" />
-                    )}
-                    {threat.type === "intrusion" && (
-                      <AlertTriangle className="h-5 w-5 text-threat-red" />
-                    )}
-                    {threat.type === "spoofing" && (
-                      <Zap className="h-5 w-5 text-data-purple" />
-                    )}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-sm font-semibold text-foreground">
-                        {threat.id}
-                      </span>
-                      <span
-                        className={cn(
-                          "rounded border px-1.5 py-0.5 text-[10px] font-medium uppercase",
-                          severityColors[threat.severity as keyof typeof severityColors]
-                        )}
-                      >
-                        {threat.severity}
-                      </span>
-                    </div>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {threat.description}
-                    </p>
-                    <div className="mt-2 flex items-center gap-4 text-xs">
-                      <span className="text-muted-foreground">
-                        Cible:{" "}
-                        <span className="font-mono text-primary">{threat.target}</span>
-                      </span>
-                      <span className="text-muted-foreground">
-                        Détecté: {threat.detectedAt}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex flex-col items-end gap-2">
-                  <span
-                    className={cn(
-                      "rounded-full px-2 py-0.5 text-xs font-medium",
-                      threat.status === "analyzing" && "bg-warning-amber/10 text-warning-amber",
-                      threat.status === "mitigating" && "bg-primary/10 text-primary"
-                    )}
-                  >
-                    {threat.status === "analyzing" && "Analyse..."}
-                    {threat.status === "mitigating" && "Mitigation"}
-                  </span>
-                  <Button variant="outline" size="sm" className="h-7 text-xs">
-                    Détails
-                  </Button>
+      <div className="space-y-8">
+        
+        {/* Section Menaces Actives */}
+        <section>
+          <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-red-500">
+            <AlertTriangle /> Menaces en cours ({activeAttacks.length})
+          </h2>
+          
+          <div className="grid gap-4">
+            {activeAttacks.length === 0 ? (
+              <div className="p-6 bg-green-500/5 border border-green-500/20 rounded-xl flex items-center gap-4">
+                <ShieldCheck className="h-10 w-10 text-green-500" />
+                <div>
+                  <h3 className="font-bold text-green-500">Système Sécurisé</h3>
+                  <p className="text-sm text-muted-foreground">Aucune activité malveillante détectée sur la constellation.</p>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ) : (
+              activeAttacks.map((attack: any) => (
+                <div key={attack.scenario_id} className="cyber-card border-l-4 border-l-red-500 p-4 rounded-r-xl border-y border-r border-border bg-background">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-lg font-bold text-red-500 uppercase">{attack.scenario_name}</h3>
+                      <p className="text-sm text-foreground">Cible : <span className="font-mono bg-secondary px-1 rounded">{attack.target_satellite}</span></p>
+                      <p className="text-xs text-muted-foreground mt-2">Détecté le : {new Date().toLocaleTimeString()}</p>
+                    </div>
+                    <div className="text-right">
+                      <span className="inline-block px-2 py-1 bg-red-500/20 text-red-500 text-xs font-bold rounded animate-pulse">
+                        CRITIQUE
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </section>
 
-        {/* Timeline */}
-        <div>
-          <ThreatTimeline />
-        </div>
+        {/* Section Historique (Dernières décisions) */}
+        <section>
+          <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+            <Search className="text-primary" /> Historique Récent
+          </h2>
+          <div className="rounded-xl border border-border overflow-hidden">
+            <table className="w-full text-sm text-left">
+              <thead className="bg-secondary/50 text-muted-foreground">
+                <tr>
+                  <th className="p-3">ID Requête</th>
+                  <th className="p-3">Menace</th>
+                  <th className="p-3">Décision</th>
+                  <th className="p-3">Opérateur</th>
+                  <th className="p-3 text-right">Heure</th>
+                </tr>
+              </thead>
+              <tbody>
+                {history.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="p-4 text-center text-muted-foreground">Aucun historique disponible</td>
+                  </tr>
+                ) : (
+                  history.map((item: any) => (
+                    <tr key={item.request_id} className="border-t border-border/50 hover:bg-secondary/20">
+                      <td className="p-3 font-mono text-xs">{item.request_id.split('-')[1]}...</td>
+                      <td className="p-3 font-medium">{item.threat_type}</td>
+                      <td className="p-3">
+                        <span className={cn(
+                          "px-2 py-0.5 rounded-full text-xs font-medium",
+                          item.status === "approved" ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-500"
+                        )}>
+                          {item.status === "approved" ? "APPROUVÉ" : "REJETÉ"}
+                        </span>
+                      </td>
+                      <td className="p-3 text-muted-foreground">{item.approved_by || "Auto"}</td>
+                      <td className="p-3 text-right text-xs font-mono">
+                        {new Date(item.approval_time).toLocaleTimeString()}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
       </div>
     </MainLayout>
   );

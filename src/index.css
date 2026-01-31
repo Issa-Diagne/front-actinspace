@@ -1,0 +1,275 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap');
+
+/* SDRIC - Space Defense & Resilience Intelligent Console Design System */
+
+@layer base {
+  :root {
+    /* Dark space theme by default */
+    --background: 222 47% 5%;
+    --foreground: 200 20% 95%;
+
+    --card: 222 47% 8%;
+    --card-foreground: 200 20% 95%;
+
+    --popover: 222 47% 7%;
+    --popover-foreground: 200 20% 95%;
+
+    --primary: 180 70% 50%;
+    --primary-foreground: 222 47% 5%;
+
+    --secondary: 222 30% 15%;
+    --secondary-foreground: 200 20% 90%;
+
+    --muted: 222 30% 12%;
+    --muted-foreground: 200 15% 55%;
+
+    --accent: 180 60% 45%;
+    --accent-foreground: 222 47% 5%;
+
+    --destructive: 0 72% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 222 30% 18%;
+    --input: 222 30% 15%;
+    --ring: 180 70% 50%;
+
+    --radius: 0.5rem;
+
+    /* SDRIC Custom Colors */
+    --cyber-cyan: 180 100% 50%;
+    --cyber-cyan-glow: 180 100% 60%;
+    --threat-red: 0 85% 55%;
+    --threat-red-glow: 0 100% 65%;
+    --warning-amber: 35 95% 55%;
+    --warning-amber-glow: 35 100% 65%;
+    --secure-green: 145 70% 45%;
+    --secure-green-glow: 145 80% 55%;
+    --data-blue: 210 90% 55%;
+    --data-purple: 270 70% 60%;
+    --space-dark: 222 47% 3%;
+    --space-deep: 222 50% 6%;
+    --grid-line: 180 30% 20%;
+
+    /* Gradients */
+    --gradient-cyber: linear-gradient(135deg, hsl(180 100% 50%) 0%, hsl(210 90% 55%) 100%);
+    --gradient-threat: linear-gradient(135deg, hsl(0 85% 55%) 0%, hsl(35 95% 55%) 100%);
+    --gradient-secure: linear-gradient(135deg, hsl(145 70% 45%) 0%, hsl(180 100% 50%) 100%);
+    --gradient-space: linear-gradient(180deg, hsl(222 47% 3%) 0%, hsl(222 50% 8%) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(222 47% 10%) 0%, hsl(222 47% 6%) 100%);
+
+    /* Shadows */
+    --shadow-cyber: 0 0 20px hsl(180 100% 50% / 0.3), 0 0 40px hsl(180 100% 50% / 0.1);
+    --shadow-threat: 0 0 20px hsl(0 85% 55% / 0.4), 0 0 40px hsl(0 85% 55% / 0.2);
+    --shadow-card: 0 4px 20px hsl(222 47% 0% / 0.5);
+    --shadow-glow: 0 0 30px hsl(180 100% 50% / 0.2);
+
+    /* Sidebar */
+    --sidebar-background: 222 47% 6%;
+    --sidebar-foreground: 200 20% 85%;
+    --sidebar-primary: 180 70% 50%;
+    --sidebar-primary-foreground: 222 47% 5%;
+    --sidebar-accent: 222 30% 12%;
+    --sidebar-accent-foreground: 200 20% 90%;
+    --sidebar-border: 222 30% 15%;
+    --sidebar-ring: 180 70% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-rajdhani antialiased;
+    background: var(--gradient-space);
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--space-dark));
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--cyber-cyan) / 0.3);
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--cyber-cyan) / 0.5);
+  }
+}
+
+@layer components {
+  /* Cyber grid background */
+  .cyber-grid {
+    background-image: 
+      linear-gradient(hsl(var(--grid-line) / 0.3) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--grid-line) / 0.3) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  /* Glow effects */
+  .glow-cyan {
+    box-shadow: var(--shadow-cyber);
+  }
+
+  .glow-threat {
+    box-shadow: var(--shadow-threat);
+  }
+
+  .glow-text-cyan {
+    text-shadow: 0 0 10px hsl(var(--cyber-cyan) / 0.8), 0 0 20px hsl(var(--cyber-cyan) / 0.4);
+  }
+
+  .glow-text-threat {
+    text-shadow: 0 0 10px hsl(var(--threat-red) / 0.8), 0 0 20px hsl(var(--threat-red) / 0.4);
+  }
+
+  /* Animated border */
+  .animated-border {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .animated-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(90deg, hsl(var(--cyber-cyan)), hsl(var(--data-blue)), hsl(var(--cyber-cyan)));
+    background-size: 200% 100%;
+    animation: border-flow 3s linear infinite;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+
+  @keyframes border-flow {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
+  }
+
+  /* Pulse animation */
+  .pulse-cyber {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+
+  /* Scan line effect */
+  .scan-line {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .scan-line::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, hsl(var(--cyber-cyan) / 0.8), transparent);
+    animation: scan 3s linear infinite;
+  }
+
+  @keyframes scan {
+    0% { top: 0; opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { top: 100%; opacity: 0; }
+  }
+
+  /* Status indicators */
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    animation: status-pulse 2s ease-in-out infinite;
+  }
+
+  .status-dot-online {
+    background: hsl(var(--secure-green));
+    box-shadow: 0 0 8px hsl(var(--secure-green));
+  }
+
+  .status-dot-warning {
+    background: hsl(var(--warning-amber));
+    box-shadow: 0 0 8px hsl(var(--warning-amber));
+  }
+
+  .status-dot-critical {
+    background: hsl(var(--threat-red));
+    box-shadow: 0 0 8px hsl(var(--threat-red));
+    animation: critical-pulse 0.5s ease-in-out infinite;
+  }
+
+  @keyframes status-pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.8; }
+  }
+
+  @keyframes critical-pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.3); opacity: 0.7; }
+  }
+
+  /* Card styles */
+  .cyber-card {
+    background: var(--gradient-card);
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-card);
+    transition: all 0.3s ease;
+  }
+
+  .cyber-card:hover {
+    border-color: hsl(var(--cyber-cyan) / 0.5);
+    box-shadow: var(--shadow-card), var(--shadow-glow);
+  }
+
+  /* Data visualization */
+  .data-bar {
+    height: 4px;
+    border-radius: 2px;
+    background: hsl(var(--muted));
+    overflow: hidden;
+  }
+
+  .data-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.5s ease;
+  }
+
+  .data-bar-fill-cyan {
+    background: linear-gradient(90deg, hsl(var(--cyber-cyan)), hsl(var(--data-blue)));
+  }
+
+  .data-bar-fill-green {
+    background: linear-gradient(90deg, hsl(var(--secure-green)), hsl(var(--cyber-cyan)));
+  }
+
+  .data-bar-fill-amber {
+    background: linear-gradient(90deg, hsl(var(--warning-amber)), hsl(var(--threat-red)));
+  }
+
+  .data-bar-fill-red {
+    background: linear-gradient(90deg, hsl(var(--threat-red)), hsl(var(--destructive)));
+  }
+}
